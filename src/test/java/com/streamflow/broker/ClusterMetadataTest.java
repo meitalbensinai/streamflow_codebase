@@ -158,7 +158,7 @@ class ClusterMetadataTest {
     }
 
     private BrokerNode createMockBroker(int id, String host, int port) {
-        return new BrokerNode(id, host, port, brokerConfig, storageEngine, 
+        return new BrokerNode(id, host, port, brokerConfig, clusterMetadata, storageEngine, 
                              replicationManager, metricsCollector);
     }
 }

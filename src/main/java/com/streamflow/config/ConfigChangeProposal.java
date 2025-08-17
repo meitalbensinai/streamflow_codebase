@@ -39,7 +39,3 @@ public class ConfigChangeProposal {
     public String getApplicant() { return applicant; }
     public ConfigChangePriority getPriority() { return priority; }
 }
-
-enum ConfigChangePriority {
-    LOW, NORMAL, HIGH, CRITICAL
-}

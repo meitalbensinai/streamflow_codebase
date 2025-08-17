@@ -35,7 +35,7 @@ public class LeaderElection {
                     .min()
                     .orElse(Integer.MAX_VALUE);
                 
-                return controller.getBrokerNode().getBrokerId() == lowestId;
+                return controller.getBrokerId() == lowestId;
             }
         }
         

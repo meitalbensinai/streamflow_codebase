@@ -86,4 +86,47 @@ class MessageTest {
         assertEquals(originalHeaders.size(), message.getHeaders().size());
         assertFalse(message.getHeaders().containsKey("new-header"));
     }
+
+    @Test
+    void testMessageCompression() {
+        // Test data that should benefit from compression
+        String repetitiveData = "This is a test message that contains repetitive data. ".repeat(50);
+        byte[] largeValue = repetitiveData.getBytes();
+        byte[] key = "compression-test-key".getBytes();
+        
+        // Test compression factory method
+        Message compressedMessage = Message.createCompressed(
+            key, 
+            largeValue, 
+            Instant.now(),
+            CompressionType.GZIP
+        );
+        
+        assertNotNull(compressedMessage);
+        assertEquals(CompressionType.GZIP, compressedMessage.getCompressionType());
+        
+        // Verify compressed data is smaller than original
+        byte[] compressedValue = compressedMessage.getCompressedValue();
+        assertTrue(compressedValue.length < largeValue.length, 
+            "Compressed data should be smaller than original");
+        
+        // Verify original data can be recovered
+        assertArrayEquals(largeValue, compressedMessage.getValue(), 
+            "Decompressed data should match original");
+    }
+    
+    @Test
+    void testCompressionThreshold() {
+        // Small messages should not be compressed even when requested
+        byte[] smallValue = "small".getBytes();
+        Message message = Message.createCompressed(
+            "key".getBytes(), 
+            smallValue, 
+            Instant.now(),
+            CompressionType.GZIP
+        );
+        
+        // Should fall back to no compression for small messages
+        assertEquals(CompressionType.NONE, message.getCompressionType());
+    }
 }

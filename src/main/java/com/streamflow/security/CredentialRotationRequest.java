@@ -17,7 +17,3 @@ public class CredentialRotationRequest {
     public CredentialType getCredentialType() { return credentialType; }
     public Map<String, String> getParameters() { return parameters; }
 }
-
-enum CredentialType {
-    PASSWORD, CERTIFICATE, TOKEN
-}

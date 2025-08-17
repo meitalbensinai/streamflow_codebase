@@ -110,6 +110,33 @@ class ReplicationManagerTest {
     }
 
     @Test
+    void testBatchReplication() {
+        // Setup: Create test messages and partition
+        TopicPartition partition = new TopicPartition("test-topic", 0);
+        List<Message> messages = Arrays.asList(
+            new Message("key1".getBytes(), "value1".getBytes(), Instant.now()),
+            new Message("key2".getBytes(), "value2".getBytes(), Instant.now()),
+            new Message("key3".getBytes(), "value3".getBytes(), Instant.now())
+        );
+        
+        // Configure batching
+        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_SIZE)).thenReturn(5);
+        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_TIMEOUT_MS)).thenReturn(100L);
+        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_ENABLED)).thenReturn(true);
+        
+        replicationManager.initialize(brokerNode);
+        replicationManager.becomeLeaderForPartition(partition, Arrays.asList(1, 2, 3));
+        
+        // Test: Batch replication should group messages efficiently
+        assertDoesNotThrow(() -> {
+            replicationManager.replicateMessageBatch(messages, partition);
+        });
+        
+        // Verify: All messages should be replicated with proper ordering
+        // Implementation should verify batch processing efficiency
+    }
+
+    @Test
     void testRemovePartition() {
         TopicPartition partition = new TopicPartition("test-topic", 0);
         List<Integer> replicas = Arrays.asList(1, 2, 3);

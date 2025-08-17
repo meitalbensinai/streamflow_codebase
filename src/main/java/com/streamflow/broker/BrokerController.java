@@ -42,8 +42,8 @@ public class BrokerController {
         this.partitionManager = partitionManager;
         this.replicationManager = replicationManager;
         this.metricsCollector = metricsCollector;
-        this.partitionRebalancer = new PartitionRebalancer(clusterMetadata, null, brokerConfig);
-        this.leaderElection = new LeaderElection(clusterMetadata, brokerConfig);
+        this.partitionRebalancer = new PartitionRebalancer(this, clusterMetadata);
+        this.leaderElection = new LeaderElection(this, clusterMetadata);
         this.scheduledExecutor = Executors.newScheduledThreadPool(2);
         this.topics = new ConcurrentHashMap<>();
         this.isController = false;
@@ -58,22 +58,22 @@ public class BrokerController {
         scheduledExecutor.scheduleAtFixedRate(
             this::performLeaderElection, 
             0, 
-            config.getLeaderElectionIntervalMs(), 
+            brokerConfig.getLeaderElectionIntervalMs(), 
             TimeUnit.MILLISECONDS
         );
         
         scheduledExecutor.scheduleAtFixedRate(
             this::checkPartitionHealth, 
-            config.getPartitionHealthCheckIntervalMs(), 
-            config.getPartitionHealthCheckIntervalMs(), 
+            brokerConfig.getPartitionHealthCheckIntervalMs(), 
+            brokerConfig.getPartitionHealthCheckIntervalMs(), 
             TimeUnit.MILLISECONDS
         );
         
-        logger.info("Broker controller started for broker {}", broker.getBrokerId());
+        logger.info("Broker controller started for broker {}", brokerConfig.getBrokerId());
     }
 
     public void shutdown() {
-        logger.info("Shutting down broker controller for broker {}", broker.getBrokerId());
+        logger.info("Shutting down broker controller for broker {}", brokerConfig.getBrokerId());
         scheduledExecutor.shutdown();
         try {
             if (!scheduledExecutor.awaitTermination(5, TimeUnit.SECONDS)) {
@@ -83,7 +83,7 @@ public class BrokerController {
             scheduledExecutor.shutdownNow();
             Thread.currentThread().interrupt();
         }
-        logger.info("Broker controller shut down for broker {}", broker.getBrokerId());
+        logger.info("Broker controller shut down for broker {}", brokerConfig.getBrokerId());
     }
 
     public void createTopic(String topicName, int partitions, int replicationFactor, 
@@ -144,7 +144,7 @@ public class BrokerController {
     private void becomeController() {
         if (!isController) {
             isController = true;
-            logger.info("Broker {} became the cluster controller", broker.getBrokerId());
+            logger.info("Broker {} became the cluster controller", brokerConfig.getBrokerId());
             
             // Perform controller duties
             partitionRebalancer.rebalanceIfNeeded();
@@ -154,7 +154,7 @@ public class BrokerController {
     private void resignController() {
         if (isController) {
             isController = false;
-            logger.info("Broker {} resigned as cluster controller", broker.getBrokerId());
+            logger.info("Broker {} resigned as cluster controller", brokerConfig.getBrokerId());
         }
     }
 
@@ -162,5 +162,5 @@ public class BrokerController {
     public ClusterMetadata getClusterMetadata() { return clusterMetadata; }
     public Map<String, Topic> getTopics() { return Map.copyOf(topics); }
     public Topic getTopic(String name) { return topics.get(name); }
-    public BrokerNode getBrokerNode() { return broker; }
+    public int getBrokerId() { return brokerConfig.getBrokerId(); }
 }

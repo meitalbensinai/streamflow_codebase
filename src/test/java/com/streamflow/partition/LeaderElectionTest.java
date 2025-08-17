@@ -52,8 +52,7 @@ class LeaderElectionTest {
         clusterMetadata = new ClusterMetadata();
         leaderElection = new LeaderElection(brokerController, clusterMetadata);
         
-        when(brokerController.getBrokerNode()).thenReturn(brokerNode);
-        when(brokerNode.getBrokerId()).thenReturn(1);
+        when(brokerController.getBrokerId()).thenReturn(1);
     }
 
     @Test
@@ -68,11 +67,11 @@ class LeaderElectionTest {
         clusterMetadata.registerBroker(broker2);
         
         // Broker 1 should become controller (lowest ID)
-        when(brokerController.getBrokerNode()).thenReturn(broker1);
+        when(brokerController.getBrokerId()).thenReturn(1);
         assertTrue(leaderElection.shouldBecomeController());
         
         // Broker 2 should not become controller
-        when(brokerController.getBrokerNode()).thenReturn(broker2);
+        when(brokerController.getBrokerId()).thenReturn(2);
         assertFalse(leaderElection.shouldBecomeController());
     }
 
@@ -88,7 +87,7 @@ class LeaderElectionTest {
         clusterMetadata.registerBroker(broker2);
         
         // Broker 1 should become controller (lowest ID among alive brokers)
-        when(brokerController.getBrokerNode()).thenReturn(broker1);
+        when(brokerController.getBrokerId()).thenReturn(1);
         assertTrue(leaderElection.shouldBecomeController());
     }
 
@@ -103,7 +102,7 @@ class LeaderElectionTest {
         clusterMetadata.setController(1);
         
         // Broker 2 should not become controller since broker 1 is alive
-        when(brokerController.getBrokerNode()).thenReturn(broker2);
+        when(brokerController.getBrokerId()).thenReturn(2);
         assertFalse(leaderElection.shouldBecomeController());
     }
 
@@ -218,7 +217,7 @@ class LeaderElectionTest {
     }
 
     private BrokerNode createMockBroker(int id) {
-        return new BrokerNode(id, "localhost", 9090 + id, brokerConfig, 
+        return new BrokerNode(id, "localhost", 9090 + id, brokerConfig, clusterMetadata,
                              storageEngine, replicationManager, metricsCollector);
     }
 }

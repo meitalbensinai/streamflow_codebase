@@ -13,6 +13,7 @@ public class Message {
     private final long offset;
     private final Instant timestamp;
     private final Map<String, String> headers;
+    private final CompressionType compressionType;
 
     public Message(String key, byte[] value, String topic, int partition, long offset, 
                    Instant timestamp, Map<String, String> headers) {
@@ -23,11 +24,25 @@ public class Message {
         this.offset = offset;
         this.timestamp = timestamp;
         this.headers = new HashMap<>(headers);
+        this.compressionType = CompressionType.NONE;
     }
 
     // Simplified constructor for testing
     public Message(byte[] key, byte[] value, Instant timestamp) {
         this(key != null ? new String(key) : null, value, "test-topic", 0, 0L, timestamp, new HashMap<>());
+    }
+
+    // Constructor with compression type
+    public Message(String key, byte[] value, String topic, int partition, long offset, 
+                   Instant timestamp, Map<String, String> headers, CompressionType compressionType) {
+        this.key = key;
+        this.value = value;
+        this.topic = topic;
+        this.partition = partition;
+        this.offset = offset;
+        this.timestamp = timestamp;
+        this.headers = new HashMap<>(headers);
+        this.compressionType = compressionType;
     }
 
     public String getKey() { return key; }
@@ -37,6 +52,7 @@ public class Message {
     public long getOffset() { return offset; }
     public Instant getTimestamp() { return timestamp; }
     public Map<String, String> getHeaders() { return new HashMap<>(headers); }
+    public CompressionType getCompressionType() { return compressionType; }
 
     @Override
     public boolean equals(Object o) {
@@ -54,6 +70,30 @@ public class Message {
         return Objects.hash(key, topic, partition, offset);
     }
 
+    public static Message createCompressed(byte[] key, byte[] value, Instant timestamp, CompressionType type) {
+        // Factory method for creating compressed messages
+        // Must integrate with storage and transmission layers
+        // Should handle compression threshold logic based on BrokerConfig
+        throw new UnsupportedOperationException("Message compression not implemented");
+    }
+
+    public byte[] getCompressedValue() {
+        // Return compressed representation if available, otherwise original
+        // Must be transparent to existing code that expects raw bytes
+        throw new UnsupportedOperationException("Message compression not implemented");
+    }
+
+    public int getSizeInBytes() {
+        int size = 0;
+        if (key != null) {
+            size += key.getBytes().length;
+        }
+        if (value != null) {
+            size += value.length;
+        }
+        return size;
+    }
+
     @Override
     public String toString() {
         return "Message{" +
@@ -62,6 +102,7 @@ public class Message {
                ", partition=" + partition +
                ", offset=" + offset +
                ", timestamp=" + timestamp +
+               ", compressionType=" + compressionType +
                '}';
     }
 }

@@ -19,6 +19,7 @@ public class BrokerNode {
     private final String host;
     private final int port;
     private final BrokerConfig config;
+    private final ClusterMetadata clusterMetadata;
     private final StorageEngine storageEngine;
     private final ReplicationManager replicationManager;
     private final MetricsCollector metricsCollector;
@@ -31,17 +32,18 @@ public class BrokerNode {
     private final AtomicBoolean isRunning;
 
     public BrokerNode(int brokerId, String host, int port, BrokerConfig config,
-                      StorageEngine storageEngine, ReplicationManager replicationManager,
-                      MetricsCollector metricsCollector) {
+                      ClusterMetadata clusterMetadata, StorageEngine storageEngine, 
+                      ReplicationManager replicationManager, MetricsCollector metricsCollector) {
         this.brokerId = brokerId;
         this.host = host;
         this.port = port;
         this.config = config;
+        this.clusterMetadata = clusterMetadata;
         this.storageEngine = storageEngine;
         this.replicationManager = replicationManager;
         this.metricsCollector = metricsCollector;
-        this.controller = new BrokerController(this, config);
         this.partitionManager = new PartitionManager(this, storageEngine, replicationManager);
+        this.controller = new BrokerController(config, clusterMetadata, partitionManager, replicationManager, metricsCollector);
         this.requestProcessor = new RequestProcessor(this, partitionManager, metricsCollector);
         
         this.leaderPartitions = ConcurrentHashMap.newKeySet();

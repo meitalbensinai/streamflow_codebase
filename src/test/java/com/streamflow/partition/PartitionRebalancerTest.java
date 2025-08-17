@@ -24,6 +24,8 @@ import java.util.Map;
 class PartitionRebalancerTest {
     
     private PartitionRebalancer partitionRebalancer;
+    
+    @Mock
     private ClusterMetadata clusterMetadata;
     
     @Mock
@@ -44,7 +46,6 @@ class PartitionRebalancerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        clusterMetadata = new ClusterMetadata();
         partitionRebalancer = new PartitionRebalancer(brokerController, clusterMetadata);
         
         when(brokerController.getClusterMetadata()).thenReturn(clusterMetadata);
@@ -187,9 +188,9 @@ class PartitionRebalancerTest {
 
     private List<BrokerNode> createBrokers(int count) {
         return Arrays.asList(
-            new BrokerNode(1, "localhost", 9092, brokerConfig, storageEngine, replicationManager, metricsCollector),
-            new BrokerNode(2, "localhost", 9093, brokerConfig, storageEngine, replicationManager, metricsCollector),
-            new BrokerNode(3, "localhost", 9094, brokerConfig, storageEngine, replicationManager, metricsCollector)
+            new BrokerNode(1, "localhost", 9092, brokerConfig, clusterMetadata, storageEngine, replicationManager, metricsCollector),
+            new BrokerNode(2, "localhost", 9093, brokerConfig, clusterMetadata, storageEngine, replicationManager, metricsCollector),
+            new BrokerNode(3, "localhost", 9094, brokerConfig, clusterMetadata, storageEngine, replicationManager, metricsCollector)
         ).subList(0, count);
     }
 }

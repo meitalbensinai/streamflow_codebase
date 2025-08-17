@@ -1,6 +1,7 @@
 package com.streamflow.replication;
 
 import com.streamflow.broker.BrokerNode;
+import com.streamflow.config.BatchingConfiguration;
 import com.streamflow.core.Message;
 import com.streamflow.core.TopicPartition;
 import org.slf4j.Logger;
@@ -20,11 +21,14 @@ public class ReplicationManager {
     private final Map<TopicPartition, ReplicationFetcher> replicationFetchers;
     private final ScheduledExecutorService executorService;
     private BrokerNode localBroker;
+    private final BatchingConfiguration batchConfig;
 
     public ReplicationManager() {
         this.replicaManagers = new ConcurrentHashMap<>();
         this.replicationFetchers = new ConcurrentHashMap<>();
         this.executorService = Executors.newScheduledThreadPool(4);
+        // Default batch configuration - will be updated during initialization
+        this.batchConfig = new BatchingConfiguration(100, 100L, 1048576L, false);
     }
 
     public void initialize(BrokerNode broker) {
@@ -87,6 +91,17 @@ public class ReplicationManager {
         if (fetcher != null) {
             fetcher.stop();
         }
+        
+        logger.info("Stopped replication for partition {}", partition);
+    }
+
+    public void replicateMessageBatch(List<Message> messages, TopicPartition partition) {
+        // Implementation needed: batch multiple messages for efficiency
+        // Must consider: ordering guarantees, partial failure handling,
+        // acknowledgment coordination, and configuration-driven batch sizing
+        // Should integrate with existing ReplicaManager workflow
+        // while maintaining consistency with current replication semantics
+        throw new UnsupportedOperationException("Batch replication not implemented");
     }
 
     public void replicateMessage(TopicPartition partition, Message message) {

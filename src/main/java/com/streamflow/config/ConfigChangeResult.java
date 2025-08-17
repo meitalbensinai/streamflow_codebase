@@ -22,7 +22,3 @@ public class ConfigChangeResult {
     public List<BrokerNode> getAppliedBrokers() { return appliedBrokers; }
     public String getErrorMessage() { return errorMessage; }
 }
-
-enum ConfigChangeStatus {
-    PENDING, VALIDATING, APPLYING, APPLIED, FAILED, ROLLED_BACK
-}
