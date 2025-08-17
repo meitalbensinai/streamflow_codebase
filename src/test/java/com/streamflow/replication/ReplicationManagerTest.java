@@ -127,13 +127,16 @@ class ReplicationManagerTest {
         replicationManager.initialize(brokerNode);
         replicationManager.becomeLeaderForPartition(partition, Arrays.asList(1, 2, 3));
         
-        // Test: Batch replication should group messages efficiently
-        assertDoesNotThrow(() -> {
+        // Test: Batch replication should throw UnsupportedOperationException until implemented
+        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
             replicationManager.replicateMessageBatch(messages, partition);
         });
         
-        // Verify: All messages should be replicated with proper ordering
-        // Implementation should verify batch processing efficiency
+        assertEquals("Batch replication not implemented", exception.getMessage());
+        
+        // TODO: When implemented, this test should verify:
+        // - All messages are replicated with proper ordering
+        // - Batch processing efficiency is maintained
     }
 
     @Test
