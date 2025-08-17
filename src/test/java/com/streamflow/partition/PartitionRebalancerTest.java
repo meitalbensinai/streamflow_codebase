@@ -24,8 +24,6 @@ import java.util.Map;
 class PartitionRebalancerTest {
     
     private PartitionRebalancer partitionRebalancer;
-    
-    @Mock
     private ClusterMetadata clusterMetadata;
     
     @Mock
@@ -46,6 +44,7 @@ class PartitionRebalancerTest {
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
+        clusterMetadata = new ClusterMetadata();
         partitionRebalancer = new PartitionRebalancer(brokerController, clusterMetadata);
         
         when(brokerController.getClusterMetadata()).thenReturn(clusterMetadata);
