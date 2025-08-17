@@ -24,7 +24,7 @@ public class Message {
         this.offset = offset;
         this.timestamp = timestamp;
         this.headers = new HashMap<>(headers);
-        this.compressionType = CompressionType.NONE;
+        this.compressionType = null;
     }
 
     // Simplified constructor for testing

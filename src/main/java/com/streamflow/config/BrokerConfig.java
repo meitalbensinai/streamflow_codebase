@@ -41,15 +41,6 @@ public class BrokerConfig {
     public static final String REPLICA_LAG_TIME_MAX_MS = "replica.lag.time.max.ms";
     public static final String REPLICA_SOCKET_TIMEOUT_MS = "replica.socket.timeout.ms";
     public static final String REPLICA_SOCKET_RECEIVE_BUFFER_BYTES = "replica.socket.receive.buffer.bytes";
-    public static final String REPLICATION_BATCH_SIZE = "replication.batch.size";
-    public static final String REPLICATION_BATCH_TIMEOUT_MS = "replication.batch.timeout.ms";
-    public static final String REPLICATION_BATCH_MAX_BYTES = "replication.batch.max.bytes";
-    public static final String REPLICATION_BATCH_ENABLED = "replication.batch.enabled";
-    public static final String COMPRESSION_TYPE = "compression.type";
-    public static final String MESSAGE_MAX_BYTES = "message.max.bytes";
-    public static final String COMPRESSION_ENABLED = "compression.enabled";
-    public static final String COMPRESSION_MIN_SIZE_BYTES = "compression.min.size.bytes";
-    public static final String COMPRESSION_LEVEL = "compression.level";
     public static final String REPLICA_FETCH_RESPONSE_MAX_BYTES = "replica.fetch.response.max.bytes";
     public static final String CONTROLLED_SHUTDOWN_MAX_RETRIES = "controlled.shutdown.max.retries";
     public static final String CONTROLLED_SHUTDOWN_RETRY_BACKOFF_MS = "controlled.shutdown.retry.backoff.ms";
@@ -100,15 +91,6 @@ public class BrokerConfig {
         configs.put(REPLICA_LAG_TIME_MAX_MS, 10000);
         configs.put(REPLICA_SOCKET_TIMEOUT_MS, 30000);
         configs.put(REPLICA_SOCKET_RECEIVE_BUFFER_BYTES, 65536);
-        configs.put(REPLICATION_BATCH_SIZE, 100);
-        configs.put(REPLICATION_BATCH_TIMEOUT_MS, 100L);
-        configs.put(REPLICATION_BATCH_MAX_BYTES, 1048576L); // 1MB
-        configs.put(REPLICATION_BATCH_ENABLED, false);
-        configs.put(COMPRESSION_TYPE, "none");
-        configs.put(MESSAGE_MAX_BYTES, 1000000);
-        configs.put(COMPRESSION_ENABLED, false);
-        configs.put(COMPRESSION_MIN_SIZE_BYTES, 1024); // 1KB threshold
-        configs.put(COMPRESSION_LEVEL, 6); // Default compression level
         configs.put(REPLICA_FETCH_RESPONSE_MAX_BYTES, 10485760);
         configs.put(CONTROLLED_SHUTDOWN_MAX_RETRIES, 3);
         configs.put(CONTROLLED_SHUTDOWN_RETRY_BACKOFF_MS, 5000);

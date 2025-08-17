@@ -109,35 +109,6 @@ class ReplicationManagerTest {
         });
     }
 
-    @Test
-    void testBatchReplication() {
-        // Setup: Create test messages and partition
-        TopicPartition partition = new TopicPartition("test-topic", 0);
-        List<Message> messages = Arrays.asList(
-            new Message("key1".getBytes(), "value1".getBytes(), Instant.now()),
-            new Message("key2".getBytes(), "value2".getBytes(), Instant.now()),
-            new Message("key3".getBytes(), "value3".getBytes(), Instant.now())
-        );
-        
-        // Configure batching
-        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_SIZE)).thenReturn(5);
-        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_TIMEOUT_MS)).thenReturn(100L);
-        when(brokerConfig.get(BrokerConfig.REPLICATION_BATCH_ENABLED)).thenReturn(true);
-        
-        replicationManager.initialize(brokerNode);
-        replicationManager.becomeLeaderForPartition(partition, Arrays.asList(1, 2, 3));
-        
-        // Test: Batch replication should throw UnsupportedOperationException until implemented
-        UnsupportedOperationException exception = assertThrows(UnsupportedOperationException.class, () -> {
-            replicationManager.replicateMessageBatch(messages, partition);
-        });
-        
-        assertEquals("Batch replication not implemented", exception.getMessage());
-        
-        // TODO: When implemented, this test should verify:
-        // - All messages are replicated with proper ordering
-        // - Batch processing efficiency is maintained
-    }
 
     @Test
     void testRemovePartition() {
