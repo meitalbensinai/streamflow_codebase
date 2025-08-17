@@ -194,6 +194,39 @@ public class BrokerConfig {
         configs.put(key, value);
     }
 
+    // Public getter methods for patches
+    public int getInt(String key) {
+        Object value = configs.get(key);
+        if (value instanceof Integer) {
+            return (Integer) value;
+        } else if (value instanceof String) {
+            return Integer.parseInt((String) value);
+        }
+        throw new IllegalArgumentException("Invalid integer value for key: " + key);
+    }
+
+    public long getLong(String key) {
+        Object value = configs.get(key);
+        if (value instanceof Long) {
+            return (Long) value;
+        } else if (value instanceof Integer) {
+            return ((Integer) value).longValue();
+        } else if (value instanceof String) {
+            return Long.parseLong((String) value);
+        }
+        throw new IllegalArgumentException("Invalid long value for key: " + key);
+    }
+
+    public boolean getBoolean(String key) {
+        Object value = configs.get(key);
+        if (value instanceof Boolean) {
+            return (Boolean) value;
+        } else if (value instanceof String) {
+            return Boolean.parseBoolean((String) value);
+        }
+        throw new IllegalArgumentException("Invalid boolean value for key: " + key);
+    }
+
     public Object get(String key) {
         return configs.get(key);
     }

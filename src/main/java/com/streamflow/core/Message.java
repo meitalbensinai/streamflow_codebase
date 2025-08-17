@@ -25,6 +25,11 @@ public class Message {
         this.headers = new HashMap<>(headers);
     }
 
+    // Simplified constructor for testing
+    public Message(byte[] key, byte[] value, Instant timestamp) {
+        this(key != null ? new String(key) : null, value, "test-topic", 0, 0L, timestamp, new HashMap<>());
+    }
+
     public String getKey() { return key; }
     public byte[] getValue() { return value; }
     public String getTopic() { return topic; }

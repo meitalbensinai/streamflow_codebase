@@ -5,6 +5,8 @@ import com.streamflow.core.Topic;
 import com.streamflow.core.TopicPartition;
 import com.streamflow.partition.PartitionRebalancer;
 import com.streamflow.partition.LeaderElection;
+import com.streamflow.metrics.MetricsCollector;
+import com.streamflow.replication.ReplicationManager;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -18,9 +20,11 @@ import java.util.concurrent.TimeUnit;
 public class BrokerController {
     private static final Logger logger = LoggerFactory.getLogger(BrokerController.class);
     
-    private final BrokerNode broker;
-    private final BrokerConfig config;
+    private final BrokerConfig brokerConfig;
     private final ClusterMetadata clusterMetadata;
+    private final PartitionManager partitionManager;
+    private final ReplicationManager replicationManager;
+    private final MetricsCollector metricsCollector;
     private final PartitionRebalancer partitionRebalancer;
     private final LeaderElection leaderElection;
     private final ScheduledExecutorService scheduledExecutor;
@@ -28,21 +32,27 @@ public class BrokerController {
     private final Map<String, Topic> topics;
     private volatile boolean isController;
 
-    public BrokerController(BrokerNode broker, BrokerConfig config) {
-        this.broker = broker;
-        this.config = config;
-        this.clusterMetadata = new ClusterMetadata();
-        this.partitionRebalancer = new PartitionRebalancer(this, clusterMetadata);
-        this.leaderElection = new LeaderElection(this, clusterMetadata);
+    public BrokerController(BrokerConfig brokerConfig, 
+                          ClusterMetadata clusterMetadata, 
+                          PartitionManager partitionManager,
+                          ReplicationManager replicationManager,
+                          MetricsCollector metricsCollector) {
+        this.brokerConfig = brokerConfig;
+        this.clusterMetadata = clusterMetadata;
+        this.partitionManager = partitionManager;
+        this.replicationManager = replicationManager;
+        this.metricsCollector = metricsCollector;
+        this.partitionRebalancer = new PartitionRebalancer(clusterMetadata, null, brokerConfig);
+        this.leaderElection = new LeaderElection(clusterMetadata, brokerConfig);
         this.scheduledExecutor = Executors.newScheduledThreadPool(2);
         this.topics = new ConcurrentHashMap<>();
         this.isController = false;
     }
 
     public void startup() {
-        logger.info("Starting broker controller for broker {}", broker.getBrokerId());
+        logger.info("Starting broker controller");
         
-        clusterMetadata.registerBroker(broker);
+        // Startup will be handled by individual components
         
         // Start periodic tasks
         scheduledExecutor.scheduleAtFixedRate(
