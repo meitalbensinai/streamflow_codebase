@@ -3,6 +3,7 @@ package com.streamflow.broker;
 import com.streamflow.core.Message;
 import com.streamflow.core.TopicPartition;
 import com.streamflow.metrics.MetricsCollector;
+import com.streamflow.security.SecurityContext;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
