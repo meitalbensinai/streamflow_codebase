@@ -51,10 +51,7 @@ public class ClusterHealthConfigurationTest {
         props.setProperty("log.segment.bytes", "15000000"); // 15MB
         props.setProperty("num.network.threads", "6");
         props.setProperty("auto.create.topics.enable", "true");
-        
-        // THIS IS THE CRITICAL MISSING CONFIGURATION
-        // The agent must discover that this key affects the health monitoring chain
-        // props.setProperty("partition.health.monitoring.strategy", "OPTIMIZED");
+
         
         brokerConfig = new BrokerConfig(props);
         clusterMetadata = new ClusterMetadata();
