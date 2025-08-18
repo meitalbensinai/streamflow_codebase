@@ -44,7 +44,9 @@ public class ConsensusManager {
         int clusterSize = clusterMetadata.getAliveBrokerCount();
         String replicationStrategy = replicationCoordinator.getSyncStrategy();
         
-        long timeout = baseElectionTimeout.get();
+        // Get base timeout from broker configuration instead of hardcoded value
+        Object brokerTimeout = configRegistry.getConfigValue("broker.leader.election.timeout");
+        long timeout = (brokerTimeout != null) ? ((Number) brokerTimeout).longValue() : baseElectionTimeout.get();
         
         // Adjust timeout based on cluster complexity
         switch (replicationStrategy) {

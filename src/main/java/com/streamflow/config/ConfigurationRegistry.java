@@ -24,11 +24,11 @@ public class ConfigurationRegistry {
     
     private void initializeDefaultMappings() {
         // Hidden mapping that connects broker config to other systems
-        configMappings.put("broker.replication.sync.mode", "replication.coordinator.sync.strategy");
-        configMappings.put("broker.partition.health.strategy", "partition.monitor.health.check.mode");
-        configMappings.put("broker.storage.compression.threshold", "storage.engine.compression.policy.threshold");
-        configMappings.put("broker.leader.election.timeout", "consensus.leader.election.timeout.ms");
-        configMappings.put("broker.message.routing.strategy", "network.message.dispatcher.routing.algorithm");
+        configMappings.put("replication.coordinator.sync.strategy", "broker.replication.sync.mode");
+        configMappings.put("partition.monitor.health.check.mode", "broker.partition.health.strategy");
+        configMappings.put("storage.engine.compression.policy.threshold", "broker.storage.compression.threshold");
+        configMappings.put("consensus.leader.election.timeout.ms", "broker.leader.election.timeout");
+        configMappings.put("network.message.dispatcher.routing.algorithm", "broker.message.routing.strategy");
     }
     
     public void registerConfigProvider(String key, Supplier<Object> provider) {
