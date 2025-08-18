@@ -106,10 +106,19 @@ public class BrokerController {
         // This connects broker config to partition health monitoring
         Object strategy = brokerConfig.get("partition.health.monitoring.strategy");
         if (strategy != null) {
-            return strategy.toString();
+            String strategyStr = strategy.toString();
+            // Map strategy to health check mode
+            if ("OPTIMIZED".equals(strategyStr)) {
+                return "OPTIMIZED";
+            }
+            return strategyStr;
         }
         
         // Fallback based on other config values
+        String syncMode = determineSyncMode();
+        if ("QUORUM".equals(syncMode)) {
+            return "ISR_BASED";
+        }
         boolean controlledShutdown = brokerConfig.isControlledShutdownEnabled();
         return controlledShutdown ? "GRACEFUL" : "AGGRESSIVE";
     }

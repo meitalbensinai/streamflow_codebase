@@ -26,9 +26,20 @@ public class MessageDispatcher {
     }
     
     private void initializeDispatcher() {
-        // Register the routing algorithm provider
+        // Register the routing algorithm provider that checks broker config first
         configRegistry.registerConfigProvider("network.message.dispatcher.routing.algorithm",
-            () -> routingAlgorithm.get());
+            this::determineRoutingAlgorithm);
+    }
+    
+    private String determineRoutingAlgorithm() {
+        // First check if broker config provides a routing strategy
+        Object brokerStrategy = configRegistry.getConfigValue("broker.message.routing.strategy");
+        if (brokerStrategy != null) {
+            return brokerStrategy.toString();
+        }
+        
+        // Fallback to local setting
+        return routingAlgorithm.get();
     }
     
     public void setRoutingAlgorithm(String algorithm) {

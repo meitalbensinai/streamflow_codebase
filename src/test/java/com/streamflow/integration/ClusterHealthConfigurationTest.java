@@ -54,7 +54,7 @@ public class ClusterHealthConfigurationTest {
         
         // THIS IS THE CRITICAL MISSING CONFIGURATION
         // The agent must discover that this key affects the health monitoring chain
-        // props.setProperty("partition.health.monitoring.strategy", "OPTIMIZED");
+        props.setProperty("partition.health.monitoring.strategy", "OPTIMIZED");
         
         brokerConfig = new BrokerConfig(props);
         clusterMetadata = new ClusterMetadata();
