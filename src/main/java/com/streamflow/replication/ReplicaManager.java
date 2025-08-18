@@ -20,7 +20,7 @@ public class ReplicaManager {
     private final List<Integer> allReplicas;
     private final Set<Integer> inSyncReplicas;
     private final Map<Integer, AtomicLong> replicaLags;
-    private final BrokerNode localBroker;
+    protected final BrokerNode localBroker;
     private final AtomicLong highWatermark;
     private volatile boolean isRunning;
 
@@ -109,7 +109,7 @@ public class ReplicaManager {
         }
     }
 
-    private void updateHighWatermark() {
+    protected void updateHighWatermark() {
         // High watermark is the minimum offset that all ISR replicas have
         // For simplicity, we'll just increment it
         long newHighWatermark = calculateHighWatermark();
@@ -120,7 +120,15 @@ public class ReplicaManager {
 
     private long calculateHighWatermark() {
         // In a real implementation, this would check the actual offsets of ISR replicas
-        return localBroker.getStorageEngine().getLogEndOffset(partition);
+        try {
+            if (localBroker != null && localBroker.getStorageEngine() != null) {
+                return localBroker.getStorageEngine().getLogEndOffset(partition);
+            }
+        } catch (Exception e) {
+            // In case of any error, return current high watermark
+            logger.debug("Error calculating high watermark, using current value", e);
+        }
+        return highWatermark.get();
     }
 
     public void handleReplicaFailure(int failedReplicaId) {

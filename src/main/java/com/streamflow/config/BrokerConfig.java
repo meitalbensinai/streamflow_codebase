@@ -45,6 +45,12 @@ public class BrokerConfig {
     public static final String CONTROLLED_SHUTDOWN_MAX_RETRIES = "controlled.shutdown.max.retries";
     public static final String CONTROLLED_SHUTDOWN_RETRY_BACKOFF_MS = "controlled.shutdown.retry.backoff.ms";
     public static final String CONTROLLED_SHUTDOWN_ENABLE = "controlled.shutdown.enable";
+    
+    // Replication batching configuration
+    public static final String REPLICATION_BATCHING_ENABLED = "replication.batching.enabled";
+    public static final String REPLICATION_BATCH_SIZE = "replication.batch.size";
+    public static final String REPLICATION_BATCH_TIMEOUT_MS = "replication.batch.timeout.ms";
+    public static final String REPLICATION_BATCH_MAX_BYTES = "replication.batch.max.bytes";
 
     public BrokerConfig(Properties props) {
         this.configs = new ConcurrentHashMap<>();
@@ -95,6 +101,12 @@ public class BrokerConfig {
         configs.put(CONTROLLED_SHUTDOWN_MAX_RETRIES, 3);
         configs.put(CONTROLLED_SHUTDOWN_RETRY_BACKOFF_MS, 5000);
         configs.put(CONTROLLED_SHUTDOWN_ENABLE, true);
+        
+        // Replication batching defaults (disabled by default for backward compatibility)
+        configs.put(REPLICATION_BATCHING_ENABLED, false);
+        configs.put(REPLICATION_BATCH_SIZE, 100);
+        configs.put(REPLICATION_BATCH_TIMEOUT_MS, 100);
+        configs.put(REPLICATION_BATCH_MAX_BYTES, 1048576); // 1MB
     }
 
     public int getBrokerId() {
@@ -143,6 +155,26 @@ public class BrokerConfig {
 
     public boolean isControlledShutdownEnabled() {
         return getBoolean(CONTROLLED_SHUTDOWN_ENABLE);
+    }
+
+    public boolean isReplicationBatchingEnabled() {
+        return getBoolean(REPLICATION_BATCHING_ENABLED);
+    }
+
+    public int getReplicationBatchSize() {
+        return getInt(REPLICATION_BATCH_SIZE);
+    }
+
+    public long getReplicationBatchTimeoutMs() {
+        return getLong(REPLICATION_BATCH_TIMEOUT_MS);
+    }
+
+    public long getReplicationBatchMaxBytes() {
+        return getLong(REPLICATION_BATCH_MAX_BYTES);
+    }
+
+    public long getReplicaSocketTimeoutMs() {
+        return getLong(REPLICA_SOCKET_TIMEOUT_MS);
     }
 
     // Utility methods

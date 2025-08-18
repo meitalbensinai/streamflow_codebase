@@ -86,6 +86,59 @@ public class MetricsCollector {
         increment("errors." + errorType);
     }
 
+    public void recordBatchCreated(TopicPartition partition) {
+        increment("replication.batches.created.total");
+        increment("replication.batches.created." + partition.getTopic());
+    }
+
+    public void recordBatchFlushed(TopicPartition partition, int messageCount, long batchSizeBytes, 
+                                   long batchAgeMs, double efficiencyRatio) {
+        increment("replication.batches.flushed.total");
+        increment("replication.batches.flushed." + partition.getTopic());
+        
+        addToGauge("replication.batch.messages.total", messageCount);
+        addToGauge("replication.batch.bytes.total", batchSizeBytes);
+        setGauge("replication.batch.age.last", batchAgeMs);
+        setGauge("replication.batch.efficiency.last", (long)(efficiencyRatio * 100));
+        
+        PartitionMetrics metrics = partitionMetrics.computeIfAbsent(
+            partition, p -> new PartitionMetrics()
+        );
+        metrics.batchesFlushed.incrementAndGet();
+        metrics.totalBatchedMessages.addAndGet(messageCount);
+        metrics.averageBatchSize.set(calculateAverageBatchSize(partition));
+    }
+
+    public void recordBatchTimeout(TopicPartition partition, int messageCount) {
+        increment("replication.batch.timeouts.total");
+        increment("replication.batch.timeouts." + partition.getTopic());
+        
+        PartitionMetrics metrics = partitionMetrics.computeIfAbsent(
+            partition, p -> new PartitionMetrics()
+        );
+        metrics.batchTimeouts.incrementAndGet();
+    }
+
+    public void recordBatchReplicationLatency(TopicPartition partition, long latencyMs) {
+        setGauge("replication.batch.latency." + partition, latencyMs);
+        setGauge("replication.batch.latency.last", latencyMs);
+    }
+
+    public void recordBatchPartialFailure(TopicPartition partition, int failedReplicas, int totalReplicas) {
+        increment("replication.batch.partial.failures.total");
+        setGauge("replication.batch.failed.replicas.last", failedReplicas);
+        setGauge("replication.batch.success.ratio.last", 
+                (long)(((double)(totalReplicas - failedReplicas) / totalReplicas) * 100));
+    }
+
+    private long calculateAverageBatchSize(TopicPartition partition) {
+        PartitionMetrics metrics = partitionMetrics.get(partition);
+        if (metrics != null && metrics.batchesFlushed.get() > 0) {
+            return metrics.totalBatchedMessages.get() / metrics.batchesFlushed.get();
+        }
+        return 0L;
+    }
+
     private void increment(String key) {
         counters.computeIfAbsent(key, k -> new AtomicLong(0)).incrementAndGet();
     }
@@ -131,10 +184,20 @@ public class MetricsCollector {
         public final AtomicLong bytesConsumed = new AtomicLong(0);
         public final AtomicLong maxReplicationLag = new AtomicLong(0);
         
+        // Batching metrics
+        public final AtomicLong batchesFlushed = new AtomicLong(0);
+        public final AtomicLong totalBatchedMessages = new AtomicLong(0);
+        public final AtomicLong batchTimeouts = new AtomicLong(0);
+        public final AtomicLong averageBatchSize = new AtomicLong(0);
+        
         public long getMessagesProduced() { return messagesProduced.get(); }
         public long getMessagesConsumed() { return messagesConsumed.get(); }
         public long getBytesProduced() { return bytesProduced.get(); }
         public long getBytesConsumed() { return bytesConsumed.get(); }
         public long getMaxReplicationLag() { return maxReplicationLag.get(); }
+        public long getBatchesFlushed() { return batchesFlushed.get(); }
+        public long getTotalBatchedMessages() { return totalBatchedMessages.get(); }
+        public long getBatchTimeouts() { return batchTimeouts.get(); }
+        public long getAverageBatchSize() { return averageBatchSize.get(); }
     }
 }

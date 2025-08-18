@@ -17,7 +17,7 @@ public class ReplicationManager {
     private static final Logger logger = LoggerFactory.getLogger(ReplicationManager.class);
     
     private final Map<TopicPartition, ReplicaManager> replicaManagers;
-    private final Map<TopicPartition, ReplicationFetcher> replicationFetchers;
+    protected final Map<TopicPartition, ReplicationFetcher> replicationFetchers;
     private final ScheduledExecutorService executorService;
     private BrokerNode localBroker;
 
