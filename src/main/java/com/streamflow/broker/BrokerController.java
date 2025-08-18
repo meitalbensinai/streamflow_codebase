@@ -6,10 +6,12 @@ import com.streamflow.core.Topic;
 import com.streamflow.core.TopicPartition;
 import com.streamflow.partition.PartitionRebalancer;
 import com.streamflow.partition.PartitionHealthMonitor;
+import com.streamflow.partition.PartitionHealthConfiguration;
 import com.streamflow.partition.LeaderElection;
 import com.streamflow.metrics.MetricsCollector;
 import com.streamflow.replication.ReplicationManager;
 import com.streamflow.replication.ReplicationCoordinator;
+import com.streamflow.storage.StorageCompressionPolicy;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,6 +36,7 @@ public class BrokerController {
     private final ConsensusManager consensusManager;
     private final PartitionHealthMonitor healthMonitor;
     private final MessageDispatcher messageDispatcher;
+    private final StorageCompressionPolicy storageCompressionPolicy;
     private final ConfigurationRegistry configRegistry;
     private final ScheduledExecutorService scheduledExecutor;
     
@@ -58,6 +61,7 @@ public class BrokerController {
         this.consensusManager = new ConsensusManager(clusterMetadata, leaderElection, replicationCoordinator);
         this.healthMonitor = new PartitionHealthMonitor(clusterMetadata, metricsCollector);
         this.messageDispatcher = new MessageDispatcher(clusterMetadata);
+        this.storageCompressionPolicy = new StorageCompressionPolicy();
         this.partitionRebalancer = new PartitionRebalancer(this, clusterMetadata);
         
         this.scheduledExecutor = Executors.newScheduledThreadPool(3);
@@ -65,6 +69,7 @@ public class BrokerController {
         this.isController = false;
         
         initializeBrokerConfigurationProviders();
+        initializeComponentConfiguration();
     }
     
     private void initializeBrokerConfigurationProviders() {
@@ -88,6 +93,13 @@ public class BrokerController {
             () -> getRoutingStrategy());
     }
     
+    private void initializeComponentConfiguration() {
+        // Initialize component configurations based on broker config
+        messageDispatcher.setRoutingAlgorithm(getRoutingStrategy());
+        consensusManager.setBaseElectionTimeout(getElectionTimeout());
+        storageCompressionPolicy.setCompressionThreshold(getCompressionThreshold());
+    }
+    
     private String determineSyncMode() {
         // Complex logic based on broker configuration
         int replicationFactor = brokerConfig.getInt("offsets.topic.replication.factor", 3);
@@ -109,9 +121,10 @@ public class BrokerController {
             return strategy.toString();
         }
         
-        // Fallback based on other config values
-        boolean controlledShutdown = brokerConfig.isControlledShutdownEnabled();
-        return controlledShutdown ? "GRACEFUL" : "AGGRESSIVE";
+        // Fallback based on replication configuration to determine optimal mode
+        int replicationFactor = brokerConfig.getInt("offsets.topic.replication.factor", 3);
+        boolean autoLeaderRebalance = brokerConfig.isAutoLeaderRebalanceEnabled();
+        return PartitionHealthConfiguration.determineOptimalMode(replicationFactor, autoLeaderRebalance);
     }
     
     private Long getCompressionThreshold() {
