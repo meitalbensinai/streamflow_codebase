@@ -67,6 +67,8 @@ public class PartitionHealthMonitor {
                 return 30000; // Standard interval for leader-only
             case "ALL_REPLICA_HEALTH":
                 return 10000; // Very frequent for all-replica monitoring
+            case "OPTIMIZED":
+                return 5000; // Optimized strategy for high-performance systems
             case "BASIC":
             default:
                 return 60000; // Less frequent for basic monitoring
