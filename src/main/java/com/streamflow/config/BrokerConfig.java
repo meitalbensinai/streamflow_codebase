@@ -150,7 +150,7 @@ public class BrokerConfig {
         return (String) configs.get(key);
     }
 
-    private int getInt(String key) {
+    public int getInt(String key) {
         Object value = configs.get(key);
         if (value instanceof Integer) {
             return (Integer) value;
@@ -160,7 +160,7 @@ public class BrokerConfig {
         throw new IllegalArgumentException("Invalid integer value for key: " + key);
     }
 
-    private int getInt(String key, int defaultValue) {
+    public int getInt(String key, int defaultValue) {
         try {
             return getInt(key);
         } catch (Exception e) {
@@ -168,7 +168,7 @@ public class BrokerConfig {
         }
     }
 
-    private long getLong(String key) {
+    public long getLong(String key) {
         Object value = configs.get(key);
         if (value instanceof Long) {
             return (Long) value;

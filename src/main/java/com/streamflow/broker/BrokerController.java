@@ -1,12 +1,15 @@
 package com.streamflow.broker;
 
 import com.streamflow.config.BrokerConfig;
+import com.streamflow.config.ConfigurationRegistry;
 import com.streamflow.core.Topic;
 import com.streamflow.core.TopicPartition;
 import com.streamflow.partition.PartitionRebalancer;
+import com.streamflow.partition.PartitionHealthMonitor;
 import com.streamflow.partition.LeaderElection;
 import com.streamflow.metrics.MetricsCollector;
 import com.streamflow.replication.ReplicationManager;
+import com.streamflow.replication.ReplicationCoordinator;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -27,6 +30,11 @@ public class BrokerController {
     private final MetricsCollector metricsCollector;
     private final PartitionRebalancer partitionRebalancer;
     private final LeaderElection leaderElection;
+    private final ReplicationCoordinator replicationCoordinator;
+    private final ConsensusManager consensusManager;
+    private final PartitionHealthMonitor healthMonitor;
+    private final MessageDispatcher messageDispatcher;
+    private final ConfigurationRegistry configRegistry;
     private final ScheduledExecutorService scheduledExecutor;
     
     private final Map<String, Topic> topics;
@@ -42,11 +50,96 @@ public class BrokerController {
         this.partitionManager = partitionManager;
         this.replicationManager = replicationManager;
         this.metricsCollector = metricsCollector;
-        this.partitionRebalancer = new PartitionRebalancer(this, clusterMetadata);
+        this.configRegistry = ConfigurationRegistry.getInstance();
+        
+        // Initialize components in dependency order - this creates the complex chain
+        this.replicationCoordinator = new ReplicationCoordinator(clusterMetadata);
         this.leaderElection = new LeaderElection(this, clusterMetadata);
-        this.scheduledExecutor = Executors.newScheduledThreadPool(2);
+        this.consensusManager = new ConsensusManager(clusterMetadata, leaderElection, replicationCoordinator);
+        this.healthMonitor = new PartitionHealthMonitor(clusterMetadata, metricsCollector);
+        this.messageDispatcher = new MessageDispatcher(clusterMetadata);
+        this.partitionRebalancer = new PartitionRebalancer(this, clusterMetadata);
+        
+        this.scheduledExecutor = Executors.newScheduledThreadPool(3);
         this.topics = new ConcurrentHashMap<>();
         this.isController = false;
+        
+        initializeBrokerConfigurationProviders();
+    }
+    
+    private void initializeBrokerConfigurationProviders() {
+        // THIS IS THE KEY HIDDEN DEPENDENCY CHAIN
+        // BrokerConfig values are connected to the complex component network through configuration registry
+        
+        // Register broker config providers that feed into the dependency chain
+        configRegistry.registerConfigProvider("broker.replication.sync.mode", 
+            () -> determineSyncMode());
+            
+        configRegistry.registerConfigProvider("broker.partition.health.strategy",
+            () -> determineHealthStrategy());
+            
+        configRegistry.registerConfigProvider("broker.storage.compression.threshold",
+            () -> getCompressionThreshold());
+            
+        configRegistry.registerConfigProvider("broker.leader.election.timeout",
+            () -> getElectionTimeout());
+            
+        configRegistry.registerConfigProvider("broker.message.routing.strategy",
+            () -> getRoutingStrategy());
+    }
+    
+    private String determineSyncMode() {
+        // Complex logic based on broker configuration
+        int replicationFactor = brokerConfig.getInt("offsets.topic.replication.factor", 3);
+        boolean autoLeaderRebalance = brokerConfig.isAutoLeaderRebalanceEnabled();
+        
+        if (replicationFactor >= 3 && autoLeaderRebalance) {
+            return "QUORUM";
+        } else if (replicationFactor == 1) {
+            return "LEADER_ONLY";
+        } else {
+            return "ALL_REPLICAS";
+        }
+    }
+    
+    private String determineHealthStrategy() {
+        // This connects broker config to partition health monitoring
+        Object strategy = brokerConfig.get("partition.health.monitoring.strategy");
+        if (strategy != null) {
+            return strategy.toString();
+        }
+        
+        // Fallback based on other config values
+        boolean controlledShutdown = brokerConfig.isControlledShutdownEnabled();
+        return controlledShutdown ? "GRACEFUL" : "AGGRESSIVE";
+    }
+    
+    private Long getCompressionThreshold() {
+        // Hidden connection to storage compression
+        return brokerConfig.getLong("log.segment.bytes") / 1000; // 1/1000th of segment size
+    }
+    
+    private Long getElectionTimeout() {
+        // Complex calculation based on multiple broker config values
+        long baseTimeout = brokerConfig.getLong("replica.socket.timeout.ms");
+        int retries = brokerConfig.getInt("controlled.shutdown.max.retries", 3);
+        long backoff = brokerConfig.getLong("controlled.shutdown.retry.backoff.ms");
+        
+        return baseTimeout + (retries * backoff);
+    }
+    
+    private String getRoutingStrategy() {
+        // Determines message routing based on broker configuration
+        boolean autoCreateTopics = brokerConfig.isAutoCreateTopicsEnabled();
+        int numNetworkThreads = brokerConfig.getNumNetworkThreads();
+        
+        if (autoCreateTopics && numNetworkThreads > 4) {
+            return "LOAD_BALANCED";
+        } else if (numNetworkThreads <= 2) {
+            return "LEADER_ONLY";
+        } else {
+            return "ROUND_ROBIN";
+        }
     }
 
     public void startup() {
@@ -62,10 +155,12 @@ public class BrokerController {
             TimeUnit.MILLISECONDS
         );
         
+        // The health check interval is now determined by the complex dependency chain
+        long healthCheckInterval = healthMonitor.getHealthCheckInterval();
         scheduledExecutor.scheduleAtFixedRate(
             this::checkPartitionHealth, 
-            brokerConfig.getPartitionHealthCheckIntervalMs(), 
-            brokerConfig.getPartitionHealthCheckIntervalMs(), 
+            healthCheckInterval, 
+            healthCheckInterval, 
             TimeUnit.MILLISECONDS
         );
         
